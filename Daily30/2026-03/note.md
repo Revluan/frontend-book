@@ -3,7 +3,7 @@
 1. 你们为什么选 Garfish 而不是 qiankun 或 Module Federation，各自的优缺点是什么？
 
 Garfish 支持 HTML 入口，与 Vite 子应用天然契合（直接加载 `index.html`）；生命周期钩子完善（beforeLoad/afterLoad/beforeMount/afterMount/beforeUnmount/afterUnmount）；且有 `reactBridge` 适配 React 19 的 `createRoot` API。qiankun 也支持 HTML 入口，但在 React 19 + Next.js 16 场景下社区适配不如 Garfish 成熟。Module Federation 要求主/子应用共享构建配置（Webpack 5+），与我们主应用 Next.js + 子应用 Vite 的异构技术栈不兼容，且没有沙箱能力。综合考虑技术栈兼容性、HTML 入口支持和独立部署能力，选择了 Garfish。
-
+ 
 2. Garfish 的沙箱隔离机制是怎么实现的，JS 沙箱和 CSS 沙箱分别用了什么方案？
 
 Garfish 的 JS 沙箱基于 Proxy 代理 `window`，子应用对全局变量的读写在沙箱内完成，卸载时自动恢复；CSS 沙箱支持 Shadow DOM 或样式作用域。但我们项目中 **`sandbox` 设为了 `false`**，原因是关闭沙箱可以让主子应用共享同一个 React 实例，避免多 React 实例导致的 hooks 报错。CSS 隔离改为手动方案：在 `beforeMount` 中给容器设置 `data-sub-app="子应用名"`，子应用 CSS 通过 `#sub-app-container[data-sub-app="xxx"]` 做命名空间隔离，容器本身使用 `isolation: isolate` 创建新的层叠上下文。
