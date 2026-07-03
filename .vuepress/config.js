@@ -1,6 +1,34 @@
 import { viteBundler } from '@vuepress/bundler-vite'
 import { defaultTheme } from '@vuepress/theme-default'
 import { defineUserConfig } from 'vuepress'
+import { readdirSync } from 'fs'
+import { join } from 'path'
+
+const daily30Dir = 'Daily30'
+
+function getDaily30Sidebar() {
+  const dirs = readdirSync(daily30Dir, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name)
+    .sort()
+    .reverse()
+
+  return dirs.map(dir => {
+    const files = readdirSync(join(daily30Dir, dir))
+      .filter(f => f.endsWith('.md'))
+      .map(f => `/${daily30Dir}/${dir}/${f}`)
+      .sort()
+
+    // 格式化目录名显示，如 "2026-02" -> "2026年2月"
+    const [year, month] = dir.split('-')
+    const label = `${year}年${parseInt(month)}月`
+
+    return {
+      text: label,
+      children: files,
+    }
+  })
+}
 
 export default defineUserConfig({
   lang: 'zh-CN',
@@ -47,7 +75,7 @@ export default defineUserConfig({
           { text: '手写题', link: '/handwrite/node.md' },
         ],
       },
-      { text: '每日30分钟', link: '/Daily30/2026-02/0209.md' },
+      { text: '每日30分钟', link: getDaily30Sidebar()[0]?.children?.[0] || '/Daily30/2026-02/0209.md' },
       { text: '面试', link: '/interview/2025-1-13仙工智能.md' },
     ],
 
@@ -80,20 +108,7 @@ export default defineUserConfig({
           ],
         },
       ],
-      '/Daily30/': [
-        {
-          text: '2026年2月',
-          children: [
-            '/Daily30/2026-02/0209.md',
-            '/Daily30/2026-02/0210.md',
-            '/Daily30/2026-02/0211.md',
-            '/Daily30/2026-02/0212.md',
-            '/Daily30/2026-02/0213.md',
-            '/Daily30/2026-02/0214.md',
-            '/Daily30/2026-02/0215.md',
-          ],
-        },
-      ],
+      '/Daily30/': getDaily30Sidebar(),
       '/resume/': [
         {
           text: '简历相关',
